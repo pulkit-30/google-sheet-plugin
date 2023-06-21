@@ -1,6 +1,6 @@
 const axios = require("axios");
-const authUrl = `https://form-connect-server.osc-fr1.scalingo.io/v1/plugin/auth`;
-const formUrl = `https://form-connect-server.osc-fr1.scalingo.io/v1/plugin/form`;
+const authUrl = `${process.env.FORM_CONNECT_SERVER_URL}/v1/plugin/auth`;
+const formUrl = `${process.env.FORM_CONNECT_SERVER_URL}/v1/plugin/form`;
 
 const clientSecret = process.env.FORM_CONNECT_SECRET;
 

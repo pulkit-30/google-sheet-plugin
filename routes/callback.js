@@ -3,6 +3,7 @@ const {
   verifyCode,
   createSpreadSheet,
   appendValues,
+  clearRangeValues,
 } = require("../oauth/google");
 const create = require("../db/auth/create");
 const router = require("express").Router();
@@ -66,25 +67,22 @@ router.get("/oauth/google/", async (req, res) => {
 
 // callback url to verify user
 router.post("/", async (req, res) => {
-  console.log("hello");
   try {
-    const { type, form, organization, response } = req.body;
-    console.log({ type, form, organization, response });
-    if (type === "responseData") {
-      // save data to spreadsheet
-      const formData = await findOne({ form });
-      console.log(formData);
-      if (!formData) {
-        return {
-          success: false,
-          message: "No data found",
-        };
-      }
-      const values = [];
-      Object.keys(response).forEach((field) => {
-        values.push(response[field]);
-      });
+    const { type, form, organization, data } = req.body;
+    // save data to spreadsheet
+    const formData = await findOne({ form });
+    if (!formData) {
+      return {
+        success: false,
+        message: "No data found",
+      };
+    }
 
+    if (type === "responseData") {
+      const values = [];
+      Object.keys(data.response).forEach((field) => {
+        values.push(data.response[field]);
+      });
       const { spreadsheetId, tokens } = formData.meta;
       const { success } = await appendValues({
         access_token: tokens.access_token,
@@ -92,6 +90,31 @@ router.post("/", async (req, res) => {
         values: [values],
       });
       if (!success) {
+        return {
+          success: false,
+          message: "Error while saving data",
+        };
+      }
+    } else if (type === "formUpdate") {
+      const values = [];
+      data.form.fields.forEach((field) => {
+        values.push(field.label);
+      });
+      const { spreadsheetId, tokens } = formData.meta;
+      let res = await clearRangeValues({
+        access_token: tokens.access_token,
+        spreadsheetId,
+        range: "A1:A1",
+      });
+      res =
+        res.success &&
+        (await appendValues({
+          access_token: tokens.access_token,
+          spreadsheetId,
+          values: [values],
+          range: "A1:A1",
+        }));
+      if (!res.success) {
         return {
           success: false,
           message: "Error while saving data",

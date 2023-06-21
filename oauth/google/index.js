@@ -73,6 +73,7 @@ async function appendValues({
   values,
   range = "A1:Z15",
   valueInputOption = "RAW",
+  ...args
 }) {
   const auth = new GoogleAuth({
     authClient: getAuth(access_token),
@@ -88,6 +89,7 @@ async function appendValues({
     resource: {
       values,
     },
+    ...args,
   };
   try {
     const response = await service.spreadsheets.values.append(request);
@@ -106,10 +108,47 @@ async function appendValues({
   }
 }
 
+async function clearRangeValues({
+  access_token,
+  spreadsheetId,
+  range = "A1:Z15",
+  ...args
+}) {
+  const auth = new GoogleAuth({
+    authClient: getAuth(access_token),
+    scopes: "https://www.googleapis.com/auth/spreadsheets",
+  });
+  const service = google.sheets({ version: "v4", auth });
+
+  const request = {
+    spreadsheetId,
+    range,
+    resource: {},
+    ...args,
+  };
+  try {
+    const response = await service.spreadsheets.values.clear(request);
+    if (response.status === 200) {
+      return {
+        success: true,
+      };
+    }
+    return {
+      success: false,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      success: false,
+    };
+  }
+}
+
 module.exports = {
   generateAuthUrl,
   verifyCode,
   getAuth,
   createSpreadSheet,
   appendValues,
+  clearRangeValues,
 };
