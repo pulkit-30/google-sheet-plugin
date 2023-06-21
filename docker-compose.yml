@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6
+    volumes:
+      - plugin_data:/data/db
+  google-sheets:
+    build:
+      context: .
+      tags:
+        - "google-sheets-plugin:latest"
+    volumes:
+      - /app/node_modules
+      - .:/app
+    env_file:
+      - .env.dev
+    depends_on:
+      - mongodb
+    container_name: google-sheets-plugin
+
+volumes:
+  plugin_data:
